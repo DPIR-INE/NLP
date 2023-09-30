@@ -1,0 +1,48 @@
+# Definir una función para manejar las coincidencias del Matcher
+def on_match_callback(matcher, doc, i, matches):
+    match_id, start, end = matches[i]
+    span = Span(doc, start, end, label="MEDICAMENTO")
+    doc.ents = [e for e in doc.ents if not (e.start < span.end and e.end > span.start)]  # Eliminar entidades superpuestas
+    doc.ents = list(doc.ents) + [span]  # Agregar la nueva entidad
+
+# Procesar un texto
+text = "COMPRA DE 1000 LORAZEPAM 2MG/ML AMPOLLA 2ML"
+doc = nlp(text)
+
+matches = matcher(doc)
+for match_id, start, end in matches:
+    on_match_callback(matcher, doc, 0, [(match_id, start, end)])
+    
+# Imprimir las entidades encontradas en el documento
+for ent in doc.ents:
+    print("Nombre:", ent.text,"--->","Entidad :" ,ent.label_)
+
+----------------------------------------------------------------------
+#FUNCION PARA PRESENTACION Y MEDICAMENTOS
+
+# Definir una función para manejar las coincidencias del Matcher
+def on_match_callback(matcher, doc, i, matches):
+    for match_id, start, end in matches:
+        matched_text = doc[start:end].text.lower()
+        label = "MEDICAMENTO" if matched_text in medicamento_patterns else "PRESENTACION"
+        span = Span(doc, start, end, label=label)
+        doc.ents = [e for e in doc.ents if not (e.start < span.end and e.end > span.start)]  # Eliminar entidades superpuestas
+        doc.ents = list(doc.ents) + [span]  # Agregar la nueva entida
+
+# Procesar un texto
+text = "CODIGO 848 FENITOINA SODICA, CAPSULA O TABLETA 100 MG."
+doc = nlp(text)
+
+matches = matcher(doc)
+for match_id, start, end in matches:
+    on_match_callback(matcher, doc, 0, [(match_id, start, end)])
+
+# Agregar etiqueta "PRESENTACION" si está presente en el texto
+if "PRESENTACION" in text:
+    span_p = Span(doc, text.index("PRESENTACION"), text.index("PRESENTACION") + len("PRESENTACION"), label="PRESENTACION")
+    doc.ents = list(doc.ents) + [span_p]
+
+# Imprimir las entidades encontradas en el documento
+for ent in doc.ents:
+    print("Nombre:", ent.text, "--->", "Entidad:", ent.label_)
+
